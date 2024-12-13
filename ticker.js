@@ -18,18 +18,15 @@ class StockTicker {
         return `
             <div class="ticker-item">
                 <span class="ticker-symbol">${displayName}</span>
-                <span class="ticker-price">$${price.toFixed(2)}</span>
+                <span class="ticker-price">$${Number(price).toFixed(2)}</span>
                 <span class="ticker-change ${isPositive ? 'price-up' : 'price-down'}">
-                    ${isPositive ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)
+                    ${isPositive ? '+' : ''}${Number(change).toFixed(2)} (${Number(percentChange).toFixed(2)}%)
                 </span>
             </div>
         `;
     }
 
-    async fetchWithDelay(symbol) {
-        // Add a 13-second delay between requests
-        await new Promise(resolve => setTimeout(resolve, 13000));
-
+    async fetchStockData(symbol) {
         try {
             const response = await fetch(
                 `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?apiKey=${config.apiKey}`
@@ -40,7 +37,15 @@ class StockTicker {
             }
 
             const data = await response.json();
-            return data;
+            if (data.results && data.results.length > 0) {
+                const result = data.results[0];
+                return {
+                    price: result.c,
+                    change: result.c - result.o,
+                    percentChange: ((result.c - result.o) / result.o) * 100
+                };
+            }
+            throw new Error('No data available');
         } catch (error) {
             console.error(`Error fetching ${symbol}:`, error);
             return null;
@@ -52,28 +57,19 @@ class StockTicker {
         this.isUpdating = true;
 
         try {
-            let tickerHTML = '';
-
-            // Update one stock at a time with delay
             for (const symbol of this.stocks) {
-                // Use cached data if available
-                if (this.cache.has(symbol)) {
-                    tickerHTML += this.cache.get(symbol);
-                }
+                const data = await this.fetchStockData(symbol);
+                await new Promise(resolve => setTimeout(resolve, 12000)); // Rate limit delay
 
-                const data = await this.fetchWithDelay(symbol);
-                if (data?.results?.[0]) {
-                    const result = data.results[0];
-                    const price = result.c;
-                    const change = result.c - result.o;
-                    const percentChange = (change / result.o) * 100;
+                if (data) {
+                    const html = this.formatStockData(symbol, data.price, data.change, data.percentChange);
+                    this.cache.set(symbol, html);
 
-                    const stockHtml = this.formatStockData(symbol, price, change, percentChange);
-                    this.cache.set(symbol, stockHtml);
-
-                    // Update ticker with all available data
-                    tickerHTML = Array.from(this.cache.values()).join('');
-                    this.tickerContent.innerHTML = tickerHTML.repeat(3);
+                    // Update display with all available data
+                    const tickerHTML = Array.from(this.cache.values()).join('');
+                    if (this.tickerContent) {
+                        this.tickerContent.innerHTML = tickerHTML.repeat(3);
+                    }
                 }
             }
         } catch (error) {
@@ -84,15 +80,12 @@ class StockTicker {
     }
 
     async initialize() {
-        // Initial update
         await this.updateTickerData();
-
-        // Update every 5 minutes to stay within rate limits
+        // Update every 5 minutes
         setInterval(() => this.updateTickerData(), 300000);
     }
 }
 
-// Initialize ticker when page loads
 document.addEventListener('DOMContentLoaded', () => {
     const ticker = new StockTicker();
     ticker.initialize();

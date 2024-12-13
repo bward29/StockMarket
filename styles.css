@@ -38,7 +38,7 @@ body {
     margin-top: 8px;
 }
 
-/* Live Ticker */
+/* Ticker */
 .marquee-container {
     background-color: #000000;
     padding: 15px 0;
@@ -52,12 +52,15 @@ body {
     overflow: hidden;
     position: relative;
     width: 100%;
+    height: 40px;
 }
 
 .marquee-content {
     display: flex;
+    position: absolute;
     animation: marquee 30s linear infinite;
     white-space: nowrap;
+    will-change: transform;
 }
 
 .ticker-item {
@@ -71,12 +74,14 @@ body {
     font-weight: bold;
     margin-right: 8px;
     color: white;
+    font-size: 1rem;
 }
 
 .ticker-price {
     color: #3b82f6;
     margin-right: 8px;
     font-weight: bold;
+    font-size: 1rem;
 }
 
 .price-up {
@@ -132,24 +137,6 @@ body {
     background-color: #16a34a;
 }
 
-/* Loading Indicator */
-.loading-indicator {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    margin: 20px 0;
-}
-
-.spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid #e5e7eb;
-    border-top: 3px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
 /* Stock Info */
 .stock-info {
     background-color: white;
@@ -202,20 +189,22 @@ body {
     margin-bottom: 20px;
 }
 
-/* Company Details */
-.company-details {
-    background-color: white;
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+/* Loading Indicator */
+.loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
 }
 
-.company-details h2 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #1f2937;
-    margin-bottom: 20px;
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
 /* Animations */
@@ -261,8 +250,18 @@ body {
     body {
         padding: 12px;
     }
+
+    .ticker-item {
+        padding: 0 10px;
+    }
+
+    .ticker-symbol,
+    .ticker-price {
+        font-size: 0.875rem;
+    }
 }
 
+/* Animation Control */
 .marquee-content:hover {
     animation-play-state: paused;
 }
