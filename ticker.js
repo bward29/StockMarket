@@ -1,16 +1,38 @@
 // ticker.js
 class StockTicker {
     constructor() {
-        this.stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'NVDA', 'JPM'];
+        this.stocks = ['DIA', 'SPY', 'QQQ', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'];
         this.tickerContent = document.getElementById('tickerContent');
-        this.apiKey = 'wLWFrAyfhxxsT2gy1Aqxz4hlxS8Ao0GS';
+        this.cache = new Map();
+        this.isUpdating = false;
     }
 
-    async fetchStockData(symbol) {
+    formatStockData(symbol, price, change, percentChange) {
+        const displayName = {
+            'DIA': 'DOW',
+            'SPY': 'S&P 500',
+            'QQQ': 'NASDAQ'
+        }[symbol] || symbol;
+
+        const isPositive = change >= 0;
+        return `
+            <div class="ticker-item">
+                <span class="ticker-symbol">${displayName}</span>
+                <span class="ticker-price">$${price.toFixed(2)}</span>
+                <span class="ticker-change ${isPositive ? 'price-up' : 'price-down'}">
+                    ${isPositive ? '+' : ''}${change.toFixed(2)} (${percentChange.toFixed(2)}%)
+                </span>
+            </div>
+        `;
+    }
+
+    async fetchWithDelay(symbol) {
+        // Add a 13-second delay between requests
+        await new Promise(resolve => setTimeout(resolve, 13000));
+
         try {
-            // Get previous day's data
             const response = await fetch(
-                `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?apiKey=${this.apiKey}`
+                `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?apiKey=${config.apiKey}`
             );
 
             if (!response.ok) {
@@ -18,83 +40,55 @@ class StockTicker {
             }
 
             const data = await response.json();
-
-            if (data.status === 'OK' && data.results && data.results.length > 0) {
-                const result = data.results[0];
-                return {
-                    symbol,
-                    price: result.c,
-                    change: result.c - result.o,
-                    percentChange: ((result.c - result.o) / result.o) * 100
-                };
-            }
-            throw new Error('No data available');
+            return data;
         } catch (error) {
             console.error(`Error fetching ${symbol}:`, error);
             return null;
         }
     }
 
-    async updateTicker() {
+    async updateTickerData() {
+        if (this.isUpdating) return;
+        this.isUpdating = true;
+
         try {
-            // Fetch data for all stocks in parallel
-            const stockDataPromises = this.stocks.map(symbol => this.fetchStockData(symbol));
-            const stocksData = await Promise.all(stockDataPromises);
+            let tickerHTML = '';
 
-            // Filter out any null results from failed API calls
-            const validStocksData = stocksData.filter(data => data !== null);
+            // Update one stock at a time with delay
+            for (const symbol of this.stocks) {
+                // Use cached data if available
+                if (this.cache.has(symbol)) {
+                    tickerHTML += this.cache.get(symbol);
+                }
 
-            if (validStocksData.length === 0) {
-                console.error('No valid stock data received');
-                return;
+                const data = await this.fetchWithDelay(symbol);
+                if (data?.results?.[0]) {
+                    const result = data.results[0];
+                    const price = result.c;
+                    const change = result.c - result.o;
+                    const percentChange = (change / result.o) * 100;
+
+                    const stockHtml = this.formatStockData(symbol, price, change, percentChange);
+                    this.cache.set(symbol, stockHtml);
+
+                    // Update ticker with all available data
+                    tickerHTML = Array.from(this.cache.values()).join('');
+                    this.tickerContent.innerHTML = tickerHTML.repeat(3);
+                }
             }
-
-            let html = '';
-            validStocksData.forEach(stock => {
-                const isPositive = stock.change >= 0;
-                html += `
-                    <div class="ticker-item">
-                        <span class="ticker-symbol">${stock.symbol}</span>
-                        <span class="ticker-price">$${stock.price.toFixed(2)}</span>
-                        <span class="ticker-change ${isPositive ? 'price-up' : 'price-down'}">
-                            ${isPositive ? '+' : ''}${stock.change.toFixed(2)} 
-                            (${stock.percentChange.toFixed(2)}%)
-                        </span>
-                    </div>
-                `;
-            });
-
-            // Duplicate content for continuous scrolling
-            if (this.tickerContent) {
-                this.tickerContent.innerHTML = html + html + html;
-            }
-
         } catch (error) {
             console.error('Error updating ticker:', error);
+        } finally {
+            this.isUpdating = false;
         }
     }
 
     async initialize() {
         // Initial update
-        await this.updateTicker();
+        await this.updateTickerData();
 
-        // Update every 60 seconds (Polygon.io free tier rate limit consideration)
-        setInterval(() => this.updateTicker(), 60000);
-    }
-
-    addStock(symbol) {
-        if (!this.stocks.includes(symbol)) {
-            this.stocks.push(symbol);
-            this.updateTicker();
-        }
-    }
-
-    removeStock(symbol) {
-        const index = this.stocks.indexOf(symbol);
-        if (index > -1) {
-            this.stocks.splice(index, 1);
-            this.updateTicker();
-        }
+        // Update every 5 minutes to stay within rate limits
+        setInterval(() => this.updateTickerData(), 300000);
     }
 }
 
