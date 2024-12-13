@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Stock Market Dashboard</h1>
+            <p>Powered by Polygon.io</p>
+        </header>
+
+        <!-- Live Ticker -->
+        <div class="marquee-container">
+            <div class="marquee">
+                <div id="tickerContent" class="marquee-content"></div>
+            </div>
+        </div>
+
+        <!-- Search Container -->
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol (e.g., AAPL)" class="search-input">
+                <button onclick="searchStock()" class="search-button">Search</button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator hidden">
+            <div class="spinner"></div>
+            <span>Loading data...</span>
+        </div>
+
+        <!-- Stock Info -->
+        <div id="stockInfo" class="stock-info hidden">
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Current Price</h3>
+                    <p id="currentPrice"></p>
+                </div>
+                <div class="info-card">
+                    <h3>Day Change</h3>
+                    <p id="dayChange"></p>
+                </div>
+                <div class="info-card">
+                    <h3>Volume</h3>
+                    <p id="volume"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div id="chartContainer" class="chart-container hidden">
+            <h2>Price History</h2>
+            <canvas id="priceChart"></canvas>
+        </div>
+
+        <!-- Company Details -->
+        <div id="companyDetails" class="company-details hidden">
+            <h2>Company Details</h2>
+            <div id="companyInfo"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="chart.js"></script>
+    <script src="app.js"></script>
+    <script src="ticker.js"></script>
+</body>
+
+</html>
