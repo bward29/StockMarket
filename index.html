@@ -17,25 +17,19 @@
             <p>Powered by Polygon.io</p>
         </header>
 
-        <!-- Live Ticker -->
-        <div class="marquee-container">
-            <div class="marquee">
-                <div id="tickerContent" class="marquee-content"></div>
+        <!-- Ticker -->
+        <div class="ticker-container">
+            <div class="ticker">
+                <div id="ticker-content"></div>
             </div>
         </div>
 
-        <!-- Search Container -->
+        <!-- Search -->
         <div class="search-container">
             <div class="search-box">
                 <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol (e.g., AAPL)" class="search-input">
                 <button onclick="searchStock()" class="search-button">Search</button>
             </div>
-        </div>
-
-        <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="loading-indicator hidden">
-            <div class="spinner"></div>
-            <span>Loading data...</span>
         </div>
 
         <!-- Stock Info -->
@@ -56,22 +50,17 @@
             </div>
         </div>
 
-        <!-- Chart Container -->
+        <!-- Chart -->
         <div id="chartContainer" class="chart-container hidden">
             <h2>Price History</h2>
             <canvas id="priceChart"></canvas>
-        </div>
-
-        <!-- Company Details -->
-        <div id="companyDetails" class="company-details hidden">
-            <h2>Company Details</h2>
-            <div id="companyInfo"></div>
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="config.js"></script>
     <script src="api.js"></script>
+    <script src="animations.js"></script>
     <script src="chart.js"></script>
     <script src="app.js"></script>
     <script src="ticker.js"></script>
